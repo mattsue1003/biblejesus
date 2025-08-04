@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聖經金句隨機產生器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .title {
+            color: #4a5568;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .verse-container {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 30px 0;
+            border-left: 5px solid #667eea;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .verse-container::before {
+            content: '"';
+            font-size: 6rem;
+            color: #e2e8f0;
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-family: serif;
+        }
+
+        .verse-text {
+            font-size: 1.4rem;
+            line-height: 1.8;
+            color: #2d3748;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .verse-reference {
+            font-size: 1.1rem;
+            color: #667eea;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .category {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .category-filter {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .category-filter.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .category-filter:hover {
+            border-color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .generate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            margin: 0 10px;
+        }
+
+        .nav-btn {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 6px 15px rgba(72, 187, 120, 0.3);
+            margin: 0 5px;
+        }
+
+        .nav-btn:disabled {
+            background: #e2e8f0;
+            color: #a0aec0;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.4);
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .generate-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .explain-btn {
+            background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 6px 15px rgba(237, 137, 54, 0.3);
+            margin: 5px;
+        }
+
+        .copy-btn {
+            background: linear-gradient(135deg, #9f7aea 0%, #805ad5 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 6px 15px rgba(159, 122, 234, 0.3);
+            margin: 5px;
+        }
+
+        .favorite-btn {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 6px 15px rgba(245, 101, 101, 0.3);
+            margin: 5px;
+        }
+
+        .favorite-btn.favorited {
+            background: linear-gradient(135deg, #fc8181 0%, #f56565 100%);
+            transform: scale(1.05);
+        }
+
+        .copy-btn:hover, .favorite-btn:hover, .explain-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .explanation-container {
+            background: linear-gradient(135deg, #fef5e7 0%, #fed7aa 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #ed8936;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .explanation-text {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            color: #744210;
+            text-align: left;
+        }
+
+        .explanation-text h4 {
+            color: #92400e;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .favorites-section {
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border-left: 5px solid #48bb78;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .favorites-section h3 {
+            color: #2f855a;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .favorites-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .favorite-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #48bb78;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .favorite-item-text {
+            font-size: 1rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .favorite-item-reference {
+            font-size: 0.9rem;
+            color: #48bb78;
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .toggle-favorites-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            font-weight: 500;
+        }
+
+        .view-favorites-btn {
+            background: linear-gradient(135deg, #38b2ac 0%, #319795 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            box-shadow: 0 6px 15px rgba(56, 178, 172, 0.3);
+            margin: 10px;
+        }
+
+        .view-favorites-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(56, 178, 172, 0.4);
+        }
+
+        .bottom-actions {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-top: 5px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #48bb78;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideInRight 0.3s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .title {
+                font-size: 2rem;
+            }
+            
+            .verse-text {
+                font-size: 1.2rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .button-group {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .button-group .generate-btn {
+                order: -1;
+                margin-bottom: 10px;
+            }
+            
+            .nav-btn, .explain-btn, .copy-btn, .favorite-btn {
+                width: 200px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🙏 聖經金句產生器</h1>
+        <p class="subtitle">與長輩分享神的話語，獲得生活的智慧與安慰</p>
+        
+        <div class="controls">
+            <div class="category-filter active" data-category="all">全部</div>
+            <div class="category-filter" data-category="faith">信心盼望</div>
+            <div class="category-filter" data-category="love">愛與饒恕</div>
+            <div class="category-filter" data-category="peace">平安安慰</div>
+            <div class="category-filter" data-category="wisdom">智慧引導</div>
+            <div class="category-filter" data-category="prayer">禱告親近</div>
+        </div>
+
+        <div class="verse-container">
+            <div class="category" id="currentCategory">點擊下方按鈕開始</div>
+            <div class="verse-text" id="verseText">
+                歡迎使用聖經金句產生器！<br>
+                點擊「獲得今日金句」按鈕，讓神的話語成為您今天的祝福。
+            </div>
+            <div class="verse-reference" id="verseReference">願主賜福您的一天</div>
+        </div>
+
+        <div class="button-group">
+            <button class="nav-btn" onclick="showPreviousVerse()" id="prevBtn" disabled>⬅️ 上一句</button>
+            <button class="generate-btn" onclick="generateVerse()">✨ 獲得今日金句</button>
+            <button class="nav-btn" onclick="showNextVerse()" id="nextBtn" disabled>下一句 ➡️</button>
+        </div>
+        
+        <div class="action-buttons">
+            <button class="explain-btn" onclick="toggleExplanation()" id="explainBtn" style="display: none;">💡 白話解釋</button>
+            <button class="copy-btn" onclick="copyVerse()" id="copyBtn" style="display: none;">📋 複製經文</button>
+            <button class="favorite-btn" onclick="toggleFavorite()" id="favoriteBtn" style="display: none;">❤️ 收藏</button>
+        </div>
+        
+        <div class="explanation-container" id="explanationContainer" style="display: none;">
+            <div class="explanation-text" id="explanationText"></div>
+        </div>
+
+        <div class="favorites-section" id="favoritesSection" style="display: none;">
+            <h3>📖 我的收藏經文</h3>
+            <div class="favorites-list" id="favoritesList"></div>
+            <button class="toggle-favorites-btn" onclick="closeFavorites()">收起收藏</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalVerses">100</div>
+                <div class="stat-label">經文總數</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="generatedCount">0</div>
+                <div class="stat-label">已產生次數</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="favoriteCount">0</div>
+                <div class="stat-label">收藏數量</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="currentFilter">全部</div>
+                <div class="stat-label">當前篩選</div>
+            </div>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="view-favorites-btn" onclick="toggleFavoritesView()" id="viewFavoritesBtn">📚 查看收藏 (0)</button>
+        </div>
+    </div>
+
+    <script>
+        const bibleVerses = [
+            {text: "神愛世人，甚至將他的獨生子賜給他們，叫一切信他的，不致滅亡，反得永生。", reference: "約翰福音 3:16", category: "faith", explanation: "這是聖經最著名的一句話！意思是說，上帝非常愛我們每一個人，就像父母愛孩子一樣。祂甚至願意讓耶穌來到世上為我們犧牲，只要我們相信祂，就能得到永遠的生命，不會真正的死亡。這就像是上帝給我們的一份最珍貴的禮物。"},
+            {text: "我靠著那加給我力量的，凡事都能做。", reference: "腓立比書 4:13", category: "faith", explanation: "這句話告訴我們，當我們感到軟弱或面對困難時，不要害怕。上帝會給我們力量和勇氣，幫助我們克服任何挑戰。就像有一位強壯的朋友在背後支持我們一樣，讓我們能夠做到原本做不到的事情。"},
+            {text: "耶和華是我的牧者，我必不致缺乏。", reference: "詩篇 23:1", category: "peace", explanation: "牧羊人會細心照顧羊群，確保牠們有草吃、有水喝、不會迷路。上帝就像我們的牧羊人一樣，會供應我們生活中所需要的一切，讓我們不用擔心缺少什麼。"},
+            {text: "你們祈求，就給你們；尋找，就尋見；叩門，就給你們開門。", reference: "馬太福音 7:7", category: "prayer", explanation: "耶穌教導我們禱告的時候要有信心。就像小孩向父母要東西一樣，我們向上帝祈求，祂會回應我們。要主動尋找上帝，祂會讓我們找到；要敲上帝的門，祂會為我們開門。關鍵是要主動、要持續。"},
+            {text: "愛是恆久忍耐，又有恩慈；愛是不嫉妒；愛是不自誇，不張狂，不做害羞的事。", reference: "哥林多前書 13:4-5", category: "love", explanation: "真正的愛是什麼樣子呢？就像父母對孩子的愛一樣：很有耐心，不會因為孩子犯錯就不愛他；很溫柔善良，不會嫉妒別人；很謙虛，不會驕傲自大或做讓人難堪的事。這就是上帝希望我們彼此相愛的方式。"}
+        ];
+
+        const categoryNames = {
+            all: "全部",
+            faith: "信心盼望",
+            love: "愛與饒恕", 
+            peace: "平安安慰",
+            wisdom: "智慧引導",
+            gratitude: "感恩讚美",
+            prayer: "禱告親近",
+            hope: "盼望永恆",
+            character: "品格生活",
+            god: "神的屬性",
+            service: "服事使命"
+        };
+
+        let currentFilter = 'all';
+        let generatedCount = 0;
+        let verseHistory = [];
+        let currentHistoryIndex = -1;
+        let isExplanationVisible = false;
+        let favorites = [];
+
+        function initializeFilters() {
+            const filters = document.querySelectorAll('.category-filter');
+            filters.forEach(filter => {
+                filter.addEventListener('click', () => {
+                    filters.forEach(f => f.classList.remove('active'));
+                    filter.classList.add('active');
+                    currentFilter = filter.dataset.category;
+                    document.getElementById('currentFilter').textContent = categoryNames[currentFilter];
+                });
+            });
+        }
+
+        function loadFavorites() {
+            try {
+                const saved = JSON.parse(localStorage.getItem('bibleFavorites') || '[]');
+                favorites = saved;
+                updateFavoriteCount();
+            } catch (e) {
+                favorites = [];
+                updateFavoriteCount();
+            }
+        }
+
+        function saveFavorites() {
+            try {
+                localStorage.setItem('bibleFavorites', JSON.stringify(favorites));
+                updateFavoriteCount();
+            } catch (e) {
+                console.log('無法儲存收藏');
+            }
+        }
+
+        function updateFavoriteCount() {
+            const count = favorites.length;
+            document.getElementById('favoriteCount').textContent = count;
+            document.getElementById('viewFavoritesBtn').textContent = `📚 查看收藏 (${count})`;
+        }
+
+        function getFilteredVerses() {
+            if (currentFilter === 'all') {
+                return bibleVerses;
+            }
+            return bibleVerses.filter(verse => verse.category === currentFilter);
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentHistoryIndex <= 0;
+            nextBtn.disabled = currentHistoryIndex >= verseHistory.length - 1;
+        }
+
+        function updateFavoriteButton(verse) {
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            const isFavorited = favorites.some(fav => fav.reference === verse.reference);
+            
+            if (isFavorited) {
+                favoriteBtn.classList.add('favorited');
+                favoriteBtn.textContent = '💖 已收藏';
+            } else {
+                favoriteBtn.classList.remove('favorited');
+                favoriteBtn.textContent = '❤️ 收藏';
+            }
+        }
+
+        function displayVerse(verse) {
+            const container = document.querySelector('.verse-container');
+            container.style.transform = 'scale(0.95)';
+            container.style.opacity = '0.7';
+            
+            setTimeout(() => {
+                document.getElementById('currentCategory').textContent = categoryNames[verse.category];
+                document.getElementById('verseText').textContent = verse.text;
+                document.getElementById('verseReference').textContent = verse.reference;
+                
+                // 顯示所有按鈕
+                document.getElementById('explainBtn').style.display = 'inline-block';
+                document.getElementById('copyBtn').style.display = 'inline-block';
+                document.getElementById('favoriteBtn').style.display = 'inline-block';
+                
+                // 更新收藏按鈕狀態
+                updateFavoriteButton(verse);
+                
+                // 隱藏解釋內容
+                isExplanationVisible = false;
+                document.getElementById('explanationContainer').style.display = 'none';
+                document.getElementById('explainBtn').textContent = '💡 白話解釋';
+                
+                container.style.transform = 'scale(1)';
+                container.style.opacity = '1';
+                container.style.transition = 'all 0.3s ease';
+            }, 150);
+        }
+
+        function generateVerse() {
+            const filteredVerses = getFilteredVerses();
+            
+            if (filteredVerses.length === 0) {
+                return;
+            }
+
+            let randomIndex;
+            let attempts = 0;
+            do {
+                randomIndex = Math.floor(Math.random() * filteredVerses.length);
+                attempts++;
+            } while (attempts < 10 && verseHistory.length > 0 && 
+                     filteredVerses[randomIndex] === verseHistory[currentHistoryIndex] && 
+                     filteredVerses.length > 1);
+            
+            const selectedVerse = filteredVerses[randomIndex];
+            
+            // 新增到歷史記錄
+            if (currentHistoryIndex < verseHistory.length - 1) {
+                verseHistory = verseHistory.slice(0, currentHistoryIndex + 1);
+            }
+            verseHistory.push(selectedVerse);
+            currentHistoryIndex = verseHistory.length - 1;
+            
+            displayVerse(selectedVerse);
+            updateNavigationButtons();
+            
+            generatedCount++;
+            document.getElementById('generatedCount').textContent = generatedCount;
+        }
+
+        function showPreviousVerse() {
+            if (currentHistoryIndex > 0) {
+                currentHistoryIndex--;
+                displayVerse(verseHistory[currentHistoryIndex]);
+                updateNavigationButtons();
+            }
+        }
+
+        function showNextVerse() {
+            if (currentHistoryIndex < verseHistory.length - 1) {
+                currentHistoryIndex++;
+                displayVerse(verseHistory[currentHistoryIndex]);
+                updateNavigationButtons();
+            }
+        }
+
+        function toggleExplanation() {
+            const container = document.getElementById('explanationContainer');
+            const btn = document.getElementById('explainBtn');
+            
+            if (!isExplanationVisible) {
+                if (verseHistory.length > 0) {
+                    const currentVerse = verseHistory[currentHistoryIndex];
+                    if (currentVerse.explanation) {
+                        document.getElementById('explanationText').innerHTML = 
+                            `<h4>💡 白話說明：</h4>${currentVerse.explanation}`;
+                        container.style.display = 'block';
+                        btn.textContent = '🔼 收起解釋';
+                        isExplanationVisible = true;
+                    } else {
+                        document.getElementById('explanationText').innerHTML = 
+                            `<h4>💡 白話說明：</h4>抱歉，這句經文的詳細解釋正在準備中，請嘗試其他經文。`;
+                        container.style.display = 'block';
+                        btn.textContent = '🔼 收起解釋';
+                        isExplanationVisible = true;
+                    }
+                }
+            } else {
+                container.style.display = 'none';
+                btn.textContent = '💡 白話解釋';
+                isExplanationVisible = false;
+            }
+        }
+
+        function copyVerse() {
+            if (verseHistory.length > 0) {
+                const currentVerse = verseHistory[currentHistoryIndex];
+                const textToCopy = `${currentVerse.text}\n\n— ${currentVerse.reference}`;
+                
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        showToast('📋 經文已複製到剪貼板');
+                    }).catch(() => {
+                        fallbackCopy(textToCopy);
+                    });
+                } else {
+                    fallbackCopy(textToCopy);
+                }
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast('📋 經文已複製到剪貼板');
+            } catch (err) {
+                showToast('❌ 複製失敗，請手動複製');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function toggleFavorite() {
+            if (verseHistory.length > 0) {
+                const currentVerse = verseHistory[currentHistoryIndex];
+                const existingIndex = favorites.findIndex(fav => fav.reference === currentVerse.reference);
+                
+                if (existingIndex >= 0) {
+                    // 移除收藏
+                    favorites.splice(existingIndex, 1);
+                    showToast('💔 已從收藏中移除');
+                } else {
+                    // 新增收藏
+                    favorites.push({
+                        text: currentVerse.text,
+                        reference: currentVerse.reference,
+                        category: currentVerse.category,
+                        explanation: currentVerse.explanation,
+                        addedDate: new Date().toISOString()
+                    });
+                    showToast('❤️ 已添加到收藏');
+                }
+                
+                saveFavorites();
+                updateFavoriteButton(currentVerse);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        function toggleFavoritesView() {
+            const section = document.getElementById('favoritesSection');
+            
+            if (section.style.display === 'none' || section.style.display === '') {
+                displayFavorites();
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function displayFavorites() {
+            const list = document.getElementById('favoritesList');
+            
+            if (favorites.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #718096;">還沒有收藏的經文，快去收藏一些喜歡的金句吧！</p>';
+                return;
+            }
+            
+            list.innerHTML = favorites.map(verse => `
+                <div class="favorite-item" onclick="loadFavoriteVerse('${verse.reference}')">
+                    <div class="favorite-item-text">${verse.text}</div>
+                    <div class="favorite-item-reference">${verse.reference}</div>
+                </div>
+            `).join('');
+        }
+
+        function loadFavoriteVerse(reference) {
+            const verse = favorites.find(fav => fav.reference === reference);
+            if (verse) {
+                // 添加到歷史記錄
+                if (currentHistoryIndex < verseHistory.length - 1) {
+                    verseHistory = verseHistory.slice(0, currentHistoryIndex + 1);
+                }
+                verseHistory.push(verse);
+                currentHistoryIndex = verseHistory.length - 1;
+                
+                displayVerse(verse);
+                updateNavigationButtons();
+                
+                // 關閉收藏視窗
+                document.getElementById('favoritesSection').style.display = 'none';
+            }
+        }
+
+        function closeFavorites() {
+            document.getElementById('favoritesSection').style.display = 'none';
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeFilters();
+            loadFavorites();
+            document.getElementById('totalVerses').textContent = bibleVerses.length;
+        });
+
+        // 鍵盤快捷鍵
+        document.addEventListener('keydown', (event) => {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                generateVerse();
+            }
+        });
+    </script>
+</body>
+</html>
